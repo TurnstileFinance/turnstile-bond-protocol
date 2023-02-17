@@ -35,10 +35,12 @@ export interface TurnstileBondInterface extends utils.Interface {
     "bondInfo(uint256)": FunctionFragment;
     "cancel(uint256)": FunctionFragment;
     "claim(uint256)": FunctionFragment;
+    "claimableAmount(uint256,address)": FunctionFragment;
     "fund(uint256)": FunctionFragment;
     "harvest(uint256)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
     "pay(uint256)": FunctionFragment;
+    "receive(uint256)": FunctionFragment;
     "safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)": FunctionFragment;
     "safeTransferFrom(address,address,uint256,uint256,bytes)": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
@@ -56,10 +58,12 @@ export interface TurnstileBondInterface extends utils.Interface {
       | "bondInfo"
       | "cancel"
       | "claim"
+      | "claimableAmount"
       | "fund"
       | "harvest"
       | "isApprovedForAll"
       | "pay"
+      | "receive"
       | "safeBatchTransferFrom"
       | "safeTransferFrom"
       | "setApprovalForAll"
@@ -91,6 +95,10 @@ export interface TurnstileBondInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
+    functionFragment: "claimableAmount",
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
     functionFragment: "fund",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
@@ -104,6 +112,10 @@ export interface TurnstileBondInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "pay",
+    values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "receive",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
@@ -161,6 +173,10 @@ export interface TurnstileBondInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "bondInfo", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "cancel", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "claim", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "claimableAmount",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "fund", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "harvest", data: BytesLike): Result;
   decodeFunctionResult(
@@ -168,6 +184,7 @@ export interface TurnstileBondInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "pay", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "receive", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "safeBatchTransferFrom",
     data: BytesLike
@@ -300,6 +317,7 @@ export interface TurnstileBond extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
+        BigNumber,
         boolean
       ] & {
         seller: string;
@@ -307,6 +325,7 @@ export interface TurnstileBond extends BaseContract {
         maxGoal: BigNumber;
         premium: BigNumber;
         raised: BigNumber;
+        received: BigNumber;
         accrued: BigNumber;
         canceled: boolean;
       }
@@ -321,6 +340,12 @@ export interface TurnstileBond extends BaseContract {
       _tokenId: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
+
+    claimableAmount(
+      _tokenId: PromiseOrValue<BigNumberish>,
+      _user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
 
     fund(
       _tokenId: PromiseOrValue<BigNumberish>,
@@ -341,6 +366,11 @@ export interface TurnstileBond extends BaseContract {
     pay(
       _tokenId: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    receive(
+      _tokenId: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
     safeBatchTransferFrom(
@@ -409,12 +439,22 @@ export interface TurnstileBond extends BaseContract {
     arg0: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<
-    [string, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, boolean] & {
+    [
+      string,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      boolean
+    ] & {
       seller: string;
       minGoal: BigNumber;
       maxGoal: BigNumber;
       premium: BigNumber;
       raised: BigNumber;
+      received: BigNumber;
       accrued: BigNumber;
       canceled: boolean;
     }
@@ -429,6 +469,12 @@ export interface TurnstileBond extends BaseContract {
     _tokenId: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
+
+  claimableAmount(
+    _tokenId: PromiseOrValue<BigNumberish>,
+    _user: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
   fund(
     _tokenId: PromiseOrValue<BigNumberish>,
@@ -449,6 +495,11 @@ export interface TurnstileBond extends BaseContract {
   pay(
     _tokenId: PromiseOrValue<BigNumberish>,
     overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  receive(
+    _tokenId: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
   safeBatchTransferFrom(
@@ -524,6 +575,7 @@ export interface TurnstileBond extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
+        BigNumber,
         boolean
       ] & {
         seller: string;
@@ -531,6 +583,7 @@ export interface TurnstileBond extends BaseContract {
         maxGoal: BigNumber;
         premium: BigNumber;
         raised: BigNumber;
+        received: BigNumber;
         accrued: BigNumber;
         canceled: boolean;
       }
@@ -545,6 +598,12 @@ export interface TurnstileBond extends BaseContract {
       _tokenId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    claimableAmount(
+      _tokenId: PromiseOrValue<BigNumberish>,
+      _user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     fund(
       _tokenId: PromiseOrValue<BigNumberish>,
@@ -563,6 +622,11 @@ export interface TurnstileBond extends BaseContract {
     ): Promise<boolean>;
 
     pay(
+      _tokenId: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    receive(
       _tokenId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -694,6 +758,12 @@ export interface TurnstileBond extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    claimableAmount(
+      _tokenId: PromiseOrValue<BigNumberish>,
+      _user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     fund(
       _tokenId: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
@@ -713,6 +783,11 @@ export interface TurnstileBond extends BaseContract {
     pay(
       _tokenId: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    receive(
+      _tokenId: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     safeBatchTransferFrom(
@@ -793,6 +868,12 @@ export interface TurnstileBond extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    claimableAmount(
+      _tokenId: PromiseOrValue<BigNumberish>,
+      _user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     fund(
       _tokenId: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
@@ -812,6 +893,11 @@ export interface TurnstileBond extends BaseContract {
     pay(
       _tokenId: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    receive(
+      _tokenId: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     safeBatchTransferFrom(
