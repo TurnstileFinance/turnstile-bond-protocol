@@ -49,14 +49,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC165__factory>;
     getContractFactory(
-      name: "ERC1155",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC1155__factory>;
-    getContractFactory(
-      name: "ERC1155TokenReceiver",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC1155TokenReceiver__factory>;
-    getContractFactory(
       name: "ITurnstile",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ITurnstile__factory>;
@@ -84,6 +76,14 @@ declare module "hardhat/types/runtime" {
       name: "TurnstileBond",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TurnstileBond__factory>;
+    getContractFactory(
+      name: "ERC1155",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC1155__factory>;
+    getContractFactory(
+      name: "ERC1155TokenReceiver",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC1155TokenReceiver__factory>;
 
     getContractAt(
       name: "Ownable",
@@ -131,16 +131,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC165>;
     getContractAt(
-      name: "ERC1155",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC1155>;
-    getContractAt(
-      name: "ERC1155TokenReceiver",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC1155TokenReceiver>;
-    getContractAt(
       name: "ITurnstile",
       address: string,
       signer?: ethers.Signer
@@ -175,6 +165,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.TurnstileBond>;
+    getContractAt(
+      name: "ERC1155",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC1155>;
+    getContractAt(
+      name: "ERC1155TokenReceiver",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC1155TokenReceiver>;
 
     // default types
     getContractFactory(

@@ -3,10 +3,10 @@
 /* eslint-disable */
 import type * as openzeppelin from "./@openzeppelin";
 export type { openzeppelin };
-import type * as rariCapital from "./@rari-capital";
-export type { rariCapital };
 import type * as contracts from "./contracts";
 export type { contracts };
+import type * as solmate from "./solmate";
+export type { solmate };
 export * as factories from "./factories";
 export type { Ownable } from "./@openzeppelin/contracts/access/Ownable";
 export { Ownable__factory } from "./factories/@openzeppelin/contracts/access/Ownable__factory";
@@ -26,10 +26,6 @@ export type { ERC165 } from "./@openzeppelin/contracts/utils/introspection/ERC16
 export { ERC165__factory } from "./factories/@openzeppelin/contracts/utils/introspection/ERC165__factory";
 export type { IERC165 } from "./@openzeppelin/contracts/utils/introspection/IERC165";
 export { IERC165__factory } from "./factories/@openzeppelin/contracts/utils/introspection/IERC165__factory";
-export type { ERC1155 } from "./@rari-capital/solmate/src/tokens/ERC1155.sol/ERC1155";
-export { ERC1155__factory } from "./factories/@rari-capital/solmate/src/tokens/ERC1155.sol/ERC1155__factory";
-export type { ERC1155TokenReceiver } from "./@rari-capital/solmate/src/tokens/ERC1155.sol/ERC1155TokenReceiver";
-export { ERC1155TokenReceiver__factory } from "./factories/@rari-capital/solmate/src/tokens/ERC1155.sol/ERC1155TokenReceiver__factory";
 export type { ITurnstile } from "./contracts/ICSR.sol/ITurnstile";
 export { ITurnstile__factory } from "./factories/contracts/ICSR.sol/ITurnstile__factory";
 export type { TurnstileUser } from "./contracts/ICSR.sol/TurnstileUser";
@@ -42,3 +38,7 @@ export type { Turnstile } from "./contracts/Turnstile";
 export { Turnstile__factory } from "./factories/contracts/Turnstile__factory";
 export type { TurnstileBond } from "./contracts/TurnstileBond";
 export { TurnstileBond__factory } from "./factories/contracts/TurnstileBond__factory";
+export type { ERC1155 } from "./solmate/src/tokens/ERC1155.sol/ERC1155";
+export { ERC1155__factory } from "./factories/solmate/src/tokens/ERC1155.sol/ERC1155__factory";
+export type { ERC1155TokenReceiver } from "./solmate/src/tokens/ERC1155.sol/ERC1155TokenReceiver";
+export { ERC1155TokenReceiver__factory } from "./factories/solmate/src/tokens/ERC1155.sol/ERC1155TokenReceiver__factory";

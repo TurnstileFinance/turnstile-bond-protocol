@@ -2,5 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as openzeppelin from "./@openzeppelin";
-export * as rariCapital from "./@rari-capital";
 export * as contracts from "./contracts";
+export * as solmate from "./solmate";
