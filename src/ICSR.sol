@@ -2,16 +2,16 @@ pragma solidity ^0.8.18;
 
 address constant CSR = 0xEcf044C5B4b867CFda001101c617eCd347095B44;
 
-import {ERC721, IERC721} from "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {ERC721Enumerable, ERC721, IERC721} from "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
-interface ITurnstile is IERC721 {
-    function balances(uint256) external view returns(uint256);
-    function currentCounterId() external view returns (uint256);
-    function getTokenId(address _smartContract) external view returns (uint256);
-    function isRegistered(address _smartContract) external view returns (bool);
-    function register(address _recipient) external returns (uint256 tokenId);
-    function assign(uint256 _tokenId) external returns (uint256);
-    function withdraw(uint256 _tokenId, address payable _recipient, uint256 _amount) external returns(uint256);
+abstract contract ITurnstile is ERC721Enumerable {
+    function balances(uint256) external view virtual returns(uint256);
+    function currentCounterId() external view virtual returns (uint256);
+    function getTokenId(address _smartContract) external view virtual returns (uint256);
+    function isRegistered(address _smartContract) external view virtual returns (bool);
+    function register(address _recipient) external virtual returns (uint256 tokenId);
+    function assign(uint256 _tokenId) external virtual returns (uint256);
+    function withdraw(uint256 _tokenId, address payable _recipient, uint256 _amount) external virtual returns(uint256);
 }
 
 

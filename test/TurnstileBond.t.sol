@@ -23,7 +23,7 @@ contract TurnstileBondTest is Test {
         vm.stopPrank();
     }
 
-    function mockAddress(string memory name) public returns(address) {
+    function mockAddress(string memory name) public pure returns(address) {
         return vm.addr(uint256(keccak256(abi.encodePacked("name : ",name))));
     }
     
