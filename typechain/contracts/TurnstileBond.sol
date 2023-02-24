@@ -255,6 +255,9 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
             (bool success, ) = msg.sender.call{value: amount}("");
             require(success, "refund failed");
         } else {
+            if(bondInfo[_tokenId].raised == 0) {
+                return;
+            }
             (bool success, ) = msg.sender.call{value : amount * bondInfo[_tokenId].accrued / (bondInfo[_tokenId].raised)}("");
             require(success, "refund failed");
         }
@@ -269,6 +272,9 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         if(bondInfo[_tokenId].status == Status.Canceled) {
             return amount;
         } else {
+            if(bondInfo[_tokenId].raised == 0) {
+                return 0;
+            }
             return amount * bondInfo[_tokenId].accrued / (bondInfo[_tokenId].raised);
         }
     }

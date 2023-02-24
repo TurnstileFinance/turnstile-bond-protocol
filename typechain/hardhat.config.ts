@@ -63,6 +63,53 @@ task("get-nfts", "get nft list")
     }
   });
 
+task("start", "start bonding")
+  .addParam("turnstile", "The turnstile address")
+  .addParam("bond", "bond contract address")
+  .addParam("nft", "tokenid")
+  .addParam("soft", "softcap")
+  .addParam("hard", "hard cap")
+  .addParam("premium", "premium")
+  .setAction(async (taskArgs, hre) => {
+    const turnstile = await hre.ethers.getContractAt(
+      "Turnstile",
+      taskArgs.turnstile
+    );
+    const bond = await hre.ethers.getContractAt("TurnstileBond", taskArgs.bond);
+    await turnstile.approve(bond.address, taskArgs.nft);
+    await bond.start(
+      taskArgs.nft,
+      hre.ethers.utils.parseEther(taskArgs.soft),
+      hre.ethers.utils.parseEther(taskArgs.hard),
+      hre.ethers.utils.parseEther(taskArgs.premium.div(100))
+    );
+  });
+
+task("fund-nft", "fund nft")
+  .addParam("bond", "bond contract address")
+  .addParam("nft", "tokenid")
+  .addParam("amount", "amount to fund")
+  .setAction(async (taskArgs, hre) => {
+    const bond = await hre.ethers.getContractAt("TurnstileBond", taskArgs.bond);
+    await bond.fund(
+      taskArgs.nft,
+      {
+        value : hre.ethers.utils.parseEther(taskArgs.amount)
+      }
+    );
+  });
+
+task("cancel", "cancel bonding")
+  .addParam("bond", "bond contract address")
+  .addParam("nft", "tokenid")
+  .setAction(async (taskArgs, hre) => {
+    const bond = await hre.ethers.getContractAt("TurnstileBond", taskArgs.bond);
+    await bond.cancel(
+      taskArgs.nft,
+    );
+  });
+
+
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
