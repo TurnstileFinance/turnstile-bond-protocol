@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 import {ERC1155} from "solmate/src/tokens/ERC1155.sol";
 import "./ICSR.sol";
 
+import "hardhat/console.sol";
+
 contract TurnstileBond is TurnstileUser, ERC1155 {
     enum Status {
         NotStarted,
@@ -228,7 +230,6 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         if(bondInfo[_tokenId].status != Status.Active) {
             revert NotActive();
         }
-        require(bondInfo[_tokenId].accrued < bondInfo[_tokenId].raised, "accrued >= raised");
         uint256 amount = msg.value;
         if(bondInfo[_tokenId].raised + amount > bondInfo[_tokenId].hardCap) {
             amount = bondInfo[_tokenId].hardCap - bondInfo[_tokenId].raised;
@@ -289,6 +290,9 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         uint256 amount = balance;
         if(bondInfo[_tokenId].accrued + balance > bondInfo[_tokenId].raised * (1e18 + bondInfo[_tokenId].premium) / 1e18) {
             amount = (bondInfo[_tokenId].raised * (1e18 + bondInfo[_tokenId].premium) / 1e18) - bondInfo[_tokenId].accrued;
+        }
+        if(amount == 0){
+            return;
         }
         turnstile.withdraw(_tokenId, payable(address(this)), amount);
         bondInfo[_tokenId].accrued += amount;

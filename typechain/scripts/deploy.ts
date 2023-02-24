@@ -6,17 +6,15 @@ import { Turnstile, TurnstileBond, MockDEX } from "../typechain-types";
 async function main() {
   let turnstile: Turnstile;
   let turnstileBond: TurnstileBond;
-  let mockDEX: MockDEX;
 
   const accounts = await ethers.getSigners();
-  const deployer = accounts[0];
-  const other = accounts[1];
+  const [deployer, ...others] = accounts;;
 
   const Turnstile = await ethers.getContractFactory("Turnstile");
   turnstile = await Turnstile.deploy();
 
   await turnstile.deployed();
-  await turnstile.register(other.address);
+  await turnstile.register(others[0].address);
 
   const TurnstileBond = await ethers.getContractFactory("TurnstileBond");
   turnstileBond = await TurnstileBond.deploy(
@@ -27,25 +25,130 @@ async function main() {
   await turnstileBond.deployed();
 
   const MockDEX = await ethers.getContractFactory("MockDEX");
-  mockDEX = await MockDEX.deploy(turnstile.address, turnstileBond.address);
 
+  // scenario 1 - user0 add nft(1) to start funding, user1 fund nft
+  console.log("Scenario1");
+  let mockDEX = await MockDEX.connect(others[0]).deploy(turnstile.address, turnstileBond.address);
   await mockDEX.deployed();
+  let tokenId = await turnstile.getTokenId(mockDEX.address);
+  console.log("nft generated " + tokenId);
 
-  await turnstile.approve(
+  await turnstile.connect(others[0]).approve(
     turnstileBond.address,
-    await turnstile.getTokenId(mockDEX.address)
+    tokenId
   );
 
-  await turnstileBond.start(
-    await turnstile.getTokenId(mockDEX.address),
+  await turnstileBond.connect(others[0]).start(
+    tokenId,
     parseEther("1"),
     parseEther("10"),
-    10
+    parseEther("0.1")
   );
 
-  await turnstile.distributeFees(await turnstile.getTokenId(mockDEX.address), {
-    value: parseEther("10"),
+  await turnstile.connect(deployer).distributeFees(tokenId, {
+    value: parseEther("3"),
   });
+
+
+  // scenario 2
+  // user1
+  // - holds nft(1) bond
+  // - add nft(2) to start funding and reaches softCap
+  // - does not start funding for nft(3)
+  // - add nft(4) to start funding but does not reaches softCap
+  console.log("Scenario2");
+  // nft(2)
+  mockDEX = await MockDEX.connect(others[1]).deploy(turnstile.address, turnstileBond.address);
+  await mockDEX.deployed();
+  tokenId = await turnstile.getTokenId(mockDEX.address);
+  console.log("nft generated " + tokenId);
+
+  await turnstile.connect(others[1]).approve(
+    turnstileBond.address,
+    tokenId
+  );
+
+  await turnstileBond.connect(others[1]).start(
+    tokenId,
+    parseEther("100"),
+    parseEther("10000"),
+    parseEther("0.33")
+  );
+
+  await turnstile.connect(deployer).distributeFees(tokenId, {
+    value: parseEther("3"),
+  });
+
+  await turnstileBond.connect(others[2]).fund(tokenId, {value : parseEther("3")});
+
+  await turnstileBond.connect(deployer).harvest(tokenId);
+ 
+  // nft(3)
+  mockDEX = await MockDEX.connect(others[1]).deploy(turnstile.address, turnstileBond.address);
+  await mockDEX.deployed();
+  tokenId = await turnstile.getTokenId(mockDEX.address);
+
+  await turnstile.connect(deployer).distributeFees(tokenId, {
+    value: parseEther("3"),
+  });
+  
+  // nft(4)
+  mockDEX = await MockDEX.connect(others[1]).deploy(turnstile.address, turnstileBond.address);
+  await mockDEX.deployed();
+  tokenId = await turnstile.getTokenId(mockDEX.address);
+
+  await turnstile.connect(deployer).distributeFees(tokenId, {
+    value: parseEther("3"),
+  });
+
+  await turnstile.connect(others[1]).approve(
+    turnstileBond.address,
+    tokenId
+  );
+
+  await turnstileBond.connect(others[1]).start(
+    tokenId,
+    parseEther("2"),
+    parseEther("200"),
+    parseEther("0.2")
+  );
+
+  await turnstileBond.connect(others[2]).fund(tokenId, {value : parseEther("1")});
+  await turnstile.connect(deployer).distributeFees(tokenId, {
+    value: parseEther("3"),
+  });
+  
+
+  await turnstileBond.connect(deployer).harvest(tokenId);
+
+  await turnstile.connect(deployer).distributeFees(tokenId, {
+    value: parseEther("3"),
+  }); // not harvested
+  
+  // nft(5)
+  mockDEX = await MockDEX.connect(others[1]).deploy(turnstile.address, turnstileBond.address);
+  await mockDEX.deployed();
+  tokenId = await turnstile.getTokenId(mockDEX.address);
+
+  await turnstile.connect(deployer).distributeFees(tokenId, {
+    value: parseEther("3"),
+  });
+
+  await turnstile.connect(others[1]).approve(
+    turnstileBond.address,
+    tokenId
+  );
+
+  await turnstileBond.connect(others[1]).start(
+    tokenId,
+    parseEther("2"),
+    parseEther("200"),
+    parseEther("0.2")
+  );
+
+  await turnstileBond.connect(others[2]).fund(tokenId, {value : parseEther("1")});
+
+  await turnstileBond.connect(others[1]).cancel(tokenId);
 
   console.log(
     `Contracts Deployed at\n

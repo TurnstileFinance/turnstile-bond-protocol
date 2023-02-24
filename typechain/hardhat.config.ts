@@ -132,7 +132,7 @@ const config: HardhatUserConfig = {
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     localhost : {
-      url : "http://localhost:8545"
+      url : "http://localhost:8545",
     }
   },
 };
