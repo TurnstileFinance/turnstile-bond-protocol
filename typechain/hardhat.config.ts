@@ -42,8 +42,25 @@ task("mint-turnstile", "Mint turnstile NFT")
       "Turnstile",
       taskArgs.turnstile
     );
-    console.log("nft Id : ", (await turnstile.currentCounterId()));
-    await new MockDEX__factory(account).deploy(taskArgs.turnstile, taskArgs.bond);
+    const nftId = await turnstile.currentCounterId();
+    console.log("nft Id : ", nftId.toNumber());
+    await new MockDEX__factory(account).deploy(taskArgs.turnstile, taskArgs.to);
+    await turnstile.transferFrom(await account.getAddress(), taskArgs.to, nftId);
+  });
+
+task("get-nfts", "get nft list")
+  .addParam("turnstile", "The turnstile address")
+  .addParam("address", "The address to query")
+  .setAction(async (taskArgs, hre) => {
+    const [account] = await hre.ethers.getSigners();
+    const turnstile = await hre.ethers.getContractAt(
+      "Turnstile",
+      taskArgs.turnstile
+    );
+    const amount = (await turnstile.balanceOf(taskArgs.address)).toNumber();
+    for(let i = 0;i < amount; i++) {
+      console.log("nft Id : ",  (await turnstile.tokenOfOwnerByIndex(taskArgs.address, i)).toNumber());
+    }
   });
 
 const config: HardhatUserConfig = {
