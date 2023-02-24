@@ -123,6 +123,7 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
     /// @param _premium the premium
     function start(uint256 _tokenId, uint256 _softCap, uint256 _hardCap, uint256 _premium) external {
         require(bondInfo[_tokenId].raised == 0,"already sold"); // TODO check if this is valid
+        require(_softCap <= _hardCap, "softCap > hardCap");
         turnstile.transferFrom(msg.sender, address(this), _tokenId);
         bondInfo[_tokenId] = BondInfo({
             status : Status.Active,
