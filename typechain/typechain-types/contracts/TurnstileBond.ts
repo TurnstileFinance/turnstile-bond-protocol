@@ -60,16 +60,6 @@ export declare namespace TurnstileBond {
     accrued: BigNumber;
   };
 
-  export type ClaimableInfoStruct = {
-    tokenId: PromiseOrValue<BigNumberish>;
-    amount: PromiseOrValue<BigNumberish>;
-  };
-
-  export type ClaimableInfoStructOutput = [BigNumber, BigNumber] & {
-    tokenId: BigNumber;
-    amount: BigNumber;
-  };
-
   export type BondStatusResponseStruct = {
     tokenId: PromiseOrValue<BigNumberish>;
     accrued: PromiseOrValue<BigNumberish>;
@@ -84,6 +74,16 @@ export declare namespace TurnstileBond {
     tokenId: BigNumber;
     accrued: BigNumber;
     info: TurnstileBond.BondInfoStructOutput;
+  };
+
+  export type ClaimableInfoStruct = {
+    tokenId: PromiseOrValue<BigNumberish>;
+    amount: PromiseOrValue<BigNumberish>;
+  };
+
+  export type ClaimableInfoStructOutput = [BigNumber, BigNumber] & {
+    tokenId: BigNumber;
+    amount: BigNumber;
   };
 }
 
@@ -437,8 +437,8 @@ export interface TurnstileBond extends BaseContract {
     allBondStatus(
       overrides?: CallOverrides
     ): Promise<
-      [TurnstileBond.BondInfoStructOutput[]] & {
-        info: TurnstileBond.BondInfoStructOutput[];
+      [TurnstileBond.BondStatusResponseStructOutput[]] & {
+        info: TurnstileBond.BondStatusResponseStructOutput[];
       }
     >;
 
@@ -512,8 +512,8 @@ export interface TurnstileBond extends BaseContract {
     currentBondStatus(
       overrides?: CallOverrides
     ): Promise<
-      [TurnstileBond.BondInfoStructOutput[]] & {
-        info: TurnstileBond.BondInfoStructOutput[];
+      [TurnstileBond.BondStatusResponseStructOutput[]] & {
+        info: TurnstileBond.BondStatusResponseStructOutput[];
       }
     >;
 
@@ -629,7 +629,7 @@ export interface TurnstileBond extends BaseContract {
 
   allBondStatus(
     overrides?: CallOverrides
-  ): Promise<TurnstileBond.BondInfoStructOutput[]>;
+  ): Promise<TurnstileBond.BondStatusResponseStructOutput[]>;
 
   allBonds(
     arg0: PromiseOrValue<BigNumberish>,
@@ -696,7 +696,7 @@ export interface TurnstileBond extends BaseContract {
 
   currentBondStatus(
     overrides?: CallOverrides
-  ): Promise<TurnstileBond.BondInfoStructOutput[]>;
+  ): Promise<TurnstileBond.BondStatusResponseStructOutput[]>;
 
   currentBonds(
     arg0: PromiseOrValue<BigNumberish>,
@@ -802,7 +802,7 @@ export interface TurnstileBond extends BaseContract {
   callStatic: {
     allBondStatus(
       overrides?: CallOverrides
-    ): Promise<TurnstileBond.BondInfoStructOutput[]>;
+    ): Promise<TurnstileBond.BondStatusResponseStructOutput[]>;
 
     allBonds(
       arg0: PromiseOrValue<BigNumberish>,
@@ -869,7 +869,7 @@ export interface TurnstileBond extends BaseContract {
 
     currentBondStatus(
       overrides?: CallOverrides
-    ): Promise<TurnstileBond.BondInfoStructOutput[]>;
+    ): Promise<TurnstileBond.BondStatusResponseStructOutput[]>;
 
     currentBonds(
       arg0: PromiseOrValue<BigNumberish>,

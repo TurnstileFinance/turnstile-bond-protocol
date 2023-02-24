@@ -83,17 +83,25 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         }
     }
 
-    function allBondStatus() external view returns(BondInfo[] memory info) {
-        info = new BondInfo[](allBonds.length);
+    function allBondStatus() external view returns(BondStatusResponse[] memory info) {
+        info = new BondStatusResponse[](allBonds.length);
         for(uint256 i = 0; i < allBonds.length; i++) {
-            info[i] = bondInfo[allBonds[i]];
+            info[i] = BondStatusResponse({
+                tokenId : allBonds[i],
+                info : bondInfo[allBonds[i]],
+                accrued : bondInfo[allBonds[i]].accrued + turnstile.balances(allBonds[i])
+            });
         }
     }
     
-    function currentBondStatus() external view returns(BondInfo[] memory info) {
-        info = new BondInfo[](currentBonds.length);
+    function currentBondStatus() external view returns(BondStatusResponse[] memory info) {
+        info = new BondStatusResponse[](currentBonds.length);
         for(uint256 i = 0; i < currentBonds.length; i++) {
-            info[i] = bondInfo[currentBonds[i]];
+            info[i] = BondStatusResponse({
+                tokenId : currentBonds[i],
+                info : bondInfo[currentBonds[i]],
+                accrued : bondInfo[currentBonds[i]].accrued + turnstile.balances(currentBonds[i])
+            });
         }
     }
 
