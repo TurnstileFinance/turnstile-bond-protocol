@@ -76,14 +76,20 @@ export declare namespace TurnstileBond {
     info: TurnstileBond.BondInfoStructOutput;
   };
 
-  export type ClaimableInfoStruct = {
+  export type ClaimableBondResponseStruct = {
     tokenId: PromiseOrValue<BigNumberish>;
     amount: PromiseOrValue<BigNumberish>;
+    bondStatus: TurnstileBond.BondStatusResponseStruct;
   };
 
-  export type ClaimableInfoStructOutput = [BigNumber, BigNumber] & {
+  export type ClaimableBondResponseStructOutput = [
+    BigNumber,
+    BigNumber,
+    TurnstileBond.BondStatusResponseStructOutput
+  ] & {
     tokenId: BigNumber;
     amount: BigNumber;
+    bondStatus: TurnstileBond.BondStatusResponseStructOutput;
   };
 }
 
@@ -488,8 +494,8 @@ export interface TurnstileBond extends BaseContract {
       _tokenId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<
-      [TurnstileBond.BondInfoStructOutput] & {
-        info: TurnstileBond.BondInfoStructOutput;
+      [TurnstileBond.BondStatusResponseStructOutput] & {
+        info: TurnstileBond.BondStatusResponseStructOutput;
       }
     >;
 
@@ -531,8 +537,8 @@ export interface TurnstileBond extends BaseContract {
       _user: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<
-      [TurnstileBond.ClaimableInfoStructOutput[]] & {
-        info: TurnstileBond.ClaimableInfoStructOutput[];
+      [TurnstileBond.ClaimableBondResponseStructOutput[]] & {
+        info: TurnstileBond.ClaimableBondResponseStructOutput[];
       }
     >;
 
@@ -676,7 +682,7 @@ export interface TurnstileBond extends BaseContract {
   bondStatus(
     _tokenId: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
-  ): Promise<TurnstileBond.BondInfoStructOutput>;
+  ): Promise<TurnstileBond.BondStatusResponseStructOutput>;
 
   cancel(
     _tokenId: PromiseOrValue<BigNumberish>,
@@ -711,7 +717,7 @@ export interface TurnstileBond extends BaseContract {
   getClaimableBond(
     _user: PromiseOrValue<string>,
     overrides?: CallOverrides
-  ): Promise<TurnstileBond.ClaimableInfoStructOutput[]>;
+  ): Promise<TurnstileBond.ClaimableBondResponseStructOutput[]>;
 
   harvest(
     _tokenId: PromiseOrValue<BigNumberish>,
@@ -849,7 +855,7 @@ export interface TurnstileBond extends BaseContract {
     bondStatus(
       _tokenId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<TurnstileBond.BondInfoStructOutput>;
+    ): Promise<TurnstileBond.BondStatusResponseStructOutput>;
 
     cancel(
       _tokenId: PromiseOrValue<BigNumberish>,
@@ -884,7 +890,7 @@ export interface TurnstileBond extends BaseContract {
     getClaimableBond(
       _user: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<TurnstileBond.ClaimableInfoStructOutput[]>;
+    ): Promise<TurnstileBond.ClaimableBondResponseStructOutput[]>;
 
     harvest(
       _tokenId: PromiseOrValue<BigNumberish>,

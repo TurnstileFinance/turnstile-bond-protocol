@@ -53,14 +53,18 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         return sellerNfts[_seller];
     }
 
-    function bondStatus(uint256 _tokenId) external view returns(BondInfo memory info) {
-        return bondInfo[_tokenId];
-    }
-
     struct BondStatusResponse {
         uint256 tokenId;
         uint256 accrued;
         BondInfo info;
+    }
+
+    function bondStatus(uint256 _tokenId) public view returns(BondStatusResponse memory info) {
+        return BondStatusResponse({
+            tokenId : _tokenId,
+            info : bondInfo[_tokenId],
+            accrued : bondInfo[_tokenId].accrued + turnstile.balances(_tokenId)
+        });
     }
 
     function sellerBondStatus(address _seller) external view returns(BondStatusResponse[] memory info) {
@@ -68,57 +72,48 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         uint256 bondLength = sellerNfts[_seller].length;
         info = new BondStatusResponse[](bondLength + turnstileBalance);
         for(uint256 i = 0; i < bondLength; i++) {
-            info[i] = BondStatusResponse({
-                tokenId : sellerNfts[_seller][i],
-                accrued : bondInfo[sellerNfts[_seller][i]].accrued + turnstile.balances(sellerNfts[_seller][i]),
-                info : bondInfo[sellerNfts[_seller][i]]
-            });
+            info[i] = bondStatus(sellerNfts[_seller][i]);
         }
         for(uint256 i = 0; i < turnstileBalance; i++) {
-            info[bondLength + i] = BondStatusResponse({
-                tokenId : turnstile.tokenOfOwnerByIndex(_seller, i),
-                accrued : turnstile.balances(turnstile.tokenOfOwnerByIndex(_seller, i)),
-                info : bondInfo[turnstile.tokenOfOwnerByIndex(_seller, i)]
-            });
+            info[bondLength + i] = bondStatus(turnstile.tokenOfOwnerByIndex(_seller, i));
         }
     }
 
     function allBondStatus() external view returns(BondStatusResponse[] memory info) {
         info = new BondStatusResponse[](allBonds.length);
         for(uint256 i = 0; i < allBonds.length; i++) {
-            info[i] = BondStatusResponse({
-                tokenId : allBonds[i],
-                info : bondInfo[allBonds[i]],
-                accrued : bondInfo[allBonds[i]].accrued + turnstile.balances(allBonds[i])
-            });
+            info[i] = bondStatus(allBonds[i]);
         }
     }
     
     function currentBondStatus() external view returns(BondStatusResponse[] memory info) {
         info = new BondStatusResponse[](currentBonds.length);
         for(uint256 i = 0; i < currentBonds.length; i++) {
-            info[i] = BondStatusResponse({
-                tokenId : currentBonds[i],
-                info : bondInfo[currentBonds[i]],
-                accrued : bondInfo[currentBonds[i]].accrued + turnstile.balances(currentBonds[i])
-            });
+            info[i] = bondStatus(currentBonds[i]);
         }
     }
 
-    function getClaimableBond(address _user) external view returns(ClaimableInfo[] memory info) {
-        ClaimableInfo[] memory data = new ClaimableInfo[](allBonds.length);
+    struct ClaimableBondResponse {
+        uint256 tokenId;
+        uint256 amount;
+        BondStatusResponse bondStatus;
+    }
+
+    function getClaimableBond(address _user) external view returns(ClaimableBondResponse[] memory info) {
+        ClaimableBondResponse[] memory data = new ClaimableBondResponse[](allBonds.length);
         uint256 resultlen = 0;
         for(uint256 i = 0; i < allBonds.length; i++) {
             uint256 claimable = claimableAmount(allBonds[i], _user);
             if(claimable > 0) {
-                data[resultlen] = ClaimableInfo({
+                data[resultlen] = ClaimableBondResponse({
                     tokenId : allBonds[i],
-                    amount : claimable
+                    amount : claimable,
+                    bondStatus : bondStatus(allBonds[i])
                 });
                 resultlen++;
             }
         }
-        info = new ClaimableInfo[](resultlen);
+        info = new ClaimableBondResponse[](resultlen);
         for(uint256 i = 0; i < resultlen; i++) {
             info[i] = data[i];
         }
