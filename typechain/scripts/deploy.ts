@@ -8,7 +8,7 @@ async function main() {
   let turnstileBond: TurnstileBond;
 
   const accounts = await ethers.getSigners();
-  const [deployer, ...others] = accounts;;
+  const [deployer, ...others] = accounts;
 
   const Turnstile = await ethers.getContractFactory("Turnstile");
   turnstile = await Turnstile.deploy();
@@ -52,10 +52,12 @@ async function main() {
 
   // scenario 2
   // user1
-  // - holds nft(1) bond
   // - add nft(2) to start funding and reaches softCap
+  // -- user2 has funded
   // - does not start funding for nft(3)
   // - add nft(4) to start funding but does not reaches softCap
+  // - add nft(5) to start funding and cancel
+  // -- user2 has funded
   console.log("Scenario2");
   // nft(2)
   mockDEX = await MockDEX.connect(others[1]).deploy(turnstile.address, turnstileBond.address);
