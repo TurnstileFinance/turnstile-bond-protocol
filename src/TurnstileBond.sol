@@ -57,15 +57,27 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         return bondInfo[_tokenId];
     }
 
-    function sellerBondStatus(address _seller) external view returns(BondInfo[] memory info) {
+    struct BondStatusResponse {
+        uint256 tokenId;
+        BondInfo info;
+    }
+
+    function sellerBondStatus(address _seller) external view returns(BondStatusResponse[] memory info) {
         uint256 turnstileBalance = turnstile.balanceOf(_seller);
         uint256 bondLength = sellerNfts[_seller].length;
-        info = new BondInfo[](bondLength + turnstileBalance);
+        info = new BondStatusResponse[](bondLength + turnstileBalance);
         for(uint256 i = 0; i < bondLength; i++) {
-            info[i] = bondInfo[sellerNfts[_seller][i]];
+            info[i] = BondStatusResponse({
+                tokenId : sellerNfts[_seller][i],
+                info : bondInfo[sellerNfts[_seller][i]]
+            });
         }
         for(uint256 i = 0; i < turnstileBalance; i++) {
-            info[bondLength + i] = bondInfo[turnstile.tokenOfOwnerByIndex(_seller, i)];
+            info[bondLength + i] = BondStatusResponse({
+                tokenId : turnstile.tokenOfOwnerByIndex(_seller, i),
+                info : bondInfo[turnstile.tokenOfOwnerByIndex(_seller, i)]
+            });
+
         }
     }
 
