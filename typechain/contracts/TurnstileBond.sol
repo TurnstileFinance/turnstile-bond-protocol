@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 import {ERC1155} from "solmate/src/tokens/ERC1155.sol";
 import "./ICSR.sol";
 
-import "hardhat/console.sol";
-
 contract TurnstileBond is TurnstileUser, ERC1155 {
     enum Status {
         NotStarted,
