@@ -72,13 +72,19 @@ export declare namespace TurnstileBond {
 
   export type BondStatusResponseStruct = {
     tokenId: PromiseOrValue<BigNumberish>;
+    accrued: PromiseOrValue<BigNumberish>;
     info: TurnstileBond.BondInfoStruct;
   };
 
   export type BondStatusResponseStructOutput = [
     BigNumber,
+    BigNumber,
     TurnstileBond.BondInfoStructOutput
-  ] & { tokenId: BigNumber; info: TurnstileBond.BondInfoStructOutput };
+  ] & {
+    tokenId: BigNumber;
+    accrued: BigNumber;
+    info: TurnstileBond.BondInfoStructOutput;
+  };
 }
 
 export interface TurnstileBondInterface extends utils.Interface {
