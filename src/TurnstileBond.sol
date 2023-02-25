@@ -123,6 +123,7 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
     /// @param _premium the premium
     function start(uint256 _tokenId, uint256 _softCap, uint256 _hardCap, uint256 _premium) external {
         require(bondInfo[_tokenId].raised == 0,"already sold"); // TODO check if this is valid
+        require(_softCap <= _hardCap, "softCap > hardCap");
         turnstile.transferFrom(msg.sender, address(this), _tokenId);
         bondInfo[_tokenId] = BondInfo({
             status : Status.Active,
@@ -136,6 +137,11 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         }); // refresh the sale
         sellerNfts[msg.sender].push(_tokenId);
         currentBonds.push(_tokenId);
+        for(uint256 i = 0; i < allBonds.length; i++) { // do not add duplicated token id to allBonds
+            if(allBonds[i] == _tokenId) {
+                return;
+            }
+        }
         allBonds.push(_tokenId);
     }
 
@@ -151,10 +157,13 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
             revert NotActive();
         }
         require(bondInfo[_tokenId].raised <= bondInfo[_tokenId].softCap, "minGoal passed");
+        require(bondInfo[_tokenId].received <= msg.value, "received > msg.value");
+        uint256 refund = msg.value - bondInfo[_tokenId].received;
+        bondInfo[_tokenId].received = 0;
         bondInfo[_tokenId].status = Status.Canceled;
         turnstile.safeTransferFrom(address(this), msg.sender, _tokenId);
         if(bondInfo[_tokenId].accrued > 0) {
-            uint256 amount = bondInfo[_tokenId].accrued;
+            uint256 amount = bondInfo[_tokenId].accrued + refund;
             bondInfo[_tokenId].accrued = 0;
             (bool success, ) = msg.sender.call{value: amount}("");
             require(success, "refund failed");
@@ -182,15 +191,18 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
     /// @dev receive the fund and transfer canto to seller
     /// @param _tokenId the token id
     function receiveFund(uint256 _tokenId) public {
-        harvest(_tokenId);
         if(msg.sender != bondInfo[_tokenId].seller) {
             revert NotSeller();
         }
         if(bondInfo[_tokenId].status != Status.Active) {
             revert NotActive();
         }
-        (bool success, ) = bondInfo[_tokenId].seller.call{value: bondInfo[_tokenId].raised - bondInfo[_tokenId].received }("");
-        require(success, "receive failed");
+        uint256 receiving = bondInfo[_tokenId].raised - bondInfo[_tokenId].received;
+        if(receiving > 0) {
+            bondInfo[_tokenId].received += receiving;
+            (bool success, ) = msg.sender.call{value: receiving}("");
+            require(success, "receive failed");
+        }
     }
 
     /// @notice withdraw turnstile nft
@@ -198,9 +210,9 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
     function withdraw(uint256 _tokenId) external {
         harvest(_tokenId);
         receiveFund(_tokenId); // receive the fund before withdrawal
-        require(bondInfo[_tokenId].accrued >= bondInfo[_tokenId].raised * (1e18 + bondInfo[_tokenId].premium) / 1e18, "raised too small");
+        require(bondInfo[_tokenId].accrued >= (bondInfo[_tokenId].raised * (1e18 + bondInfo[_tokenId].premium)) / 1e18, "accrued < raised * (1 + premium)");
         turnstile.transferFrom(address(this), msg.sender, _tokenId);
-        (bool success, ) = msg.sender.call{value : bondInfo[_tokenId].accrued - bondInfo[_tokenId].raised * (1e18 + bondInfo[_tokenId].premium) / 1e18}("");
+        (bool success, ) = msg.sender.call{value : bondInfo[_tokenId].accrued - (bondInfo[_tokenId].raised * (1e18 + bondInfo[_tokenId].premium)) / 1e18}("");
         require(success, "refund failed");
         // remove _tokenId from sellerNfts
         uint256[] storage tokenIds = sellerNfts[msg.sender];
@@ -245,8 +257,14 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
     /// @dev claim amount will be calculated by the ratio of raised and accrued if not canceled
     /// @param _tokenId the token id
     function claim(uint256 _tokenId) external {
-        harvest(_tokenId);
+        if(bondInfo[_tokenId].status == Status.Active) { // guard to enable claim after withdraw/cancel
+            harvest(_tokenId);
+        }
         uint256 amount = balanceOf[msg.sender][_tokenId];
+        uint256 accrueShare = 0; 
+        if( bondInfo[_tokenId].raised > 0) {
+            accrueShare = bondInfo[_tokenId].accrued * amount / bondInfo[_tokenId].raised;
+        }
         bondInfo[_tokenId].raised -= amount;
         _burn(msg.sender, _tokenId, amount);
         if(bondInfo[_tokenId].status == Status.Canceled) {
@@ -257,7 +275,9 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
             if(bondInfo[_tokenId].raised == 0) {
                 return;
             }
-            (bool success, ) = msg.sender.call{value : amount * bondInfo[_tokenId].accrued / (bondInfo[_tokenId].raised)}("");
+            bondInfo[_tokenId].accrued -= accrueShare;
+
+            (bool success, ) = msg.sender.call{value : accrueShare}("");        
             require(success, "refund failed");
         }
     }

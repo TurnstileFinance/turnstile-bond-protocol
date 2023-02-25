@@ -65,9 +65,9 @@ async function main() {
   tokenId = await turnstile.getTokenId(mockDEX.address);
   console.log("nft generated " + tokenId);
 
-  await turnstile.connect(others[1]).approve(
+  await turnstile.connect(others[1]).setApprovalForAll(
     turnstileBond.address,
-    tokenId
+    true
   );
 
   await turnstileBond.connect(others[1]).start(
@@ -103,10 +103,6 @@ async function main() {
     value: parseEther("3"),
   });
 
-  await turnstile.connect(others[1]).approve(
-    turnstileBond.address,
-    tokenId
-  );
 
   await turnstileBond.connect(others[1]).start(
     tokenId,
@@ -136,10 +132,6 @@ async function main() {
     value: parseEther("3"),
   });
 
-  await turnstile.connect(others[1]).approve(
-    turnstileBond.address,
-    tokenId
-  );
 
   await turnstileBond.connect(others[1]).start(
     tokenId,

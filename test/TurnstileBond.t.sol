@@ -34,4 +34,63 @@ contract TurnstileBondTest is Test {
         bond.start(id, 100, 1000, 10);
         vm.stopPrank();
     }
+
+    function testClaimAfterCancel() external {
+        (address a, uint256 id,) = createCSR("test1");
+        address b = mockAddress("test2");
+        vm.startPrank(a);
+        turnstile.approve(address(bond), id);
+        bond.start(id, 100, 1000, 10);
+        vm.stopPrank();
+
+        vm.deal(b,1000000);
+        vm.startPrank(b);
+        bond.fund{value: 100}(id);
+        vm.stopPrank();
+        
+        vm.startPrank(a);
+        (,
+        ,
+        ,
+        ,
+        ,
+        ,
+        uint256 received
+        ,) = bond.bondInfo(id);
+
+        uint256 cancelAmount = received;
+        bond.cancel{value:cancelAmount}(id);
+        vm.stopPrank();
+
+        vm.startPrank(b);
+        bond.claim(id);
+        vm.stopPrank();
+    }
+
+    function testWithdrawAfterSuccessfulFund() external {
+        (address a, uint256 id,) = createCSR("test1");
+        address b = mockAddress("test2");
+        vm.startPrank(a);
+        turnstile.approve(address(bond), id);
+        bond.start(id, 100, 1000, 1e17);
+        vm.stopPrank();
+
+        vm.deal(b,1000000);
+        vm.startPrank(b);
+        bond.fund{value: 1000}(id);
+        vm.stopPrank();
+
+        turnstile.distributeFees{value: 1200}(id);
+        
+        vm.startPrank(a);
+        uint256 balanceBeforeReceive = a.balance;
+        bond.receiveFund(id);
+        uint256 balanceBefore = a.balance;
+        assertEq(balanceBefore - balanceBeforeReceive, 1000);
+        bond.withdraw(id);
+        uint256 balanceAfter = a.balance;
+        assertEq(balanceAfter - balanceBefore, 0);
+        assertEq(turnstile.balances(id), 100);
+        vm.stopPrank();
+    }
 }
