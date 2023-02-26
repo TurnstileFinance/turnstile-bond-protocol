@@ -99,7 +99,7 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         uint256 resultlen = 0;
         for(uint256 i = 0; i < allBonds.length; i++) {
             uint256 claimable = claimableAmount(allBonds[i], _user);
-            if(claimable > 0) {
+            if(balanceOf[_user][allBonds[i]] > 0) {
                 data[resultlen] = ClaimableBondResponse({
                     tokenId : allBonds[i],
                     amount : claimable,

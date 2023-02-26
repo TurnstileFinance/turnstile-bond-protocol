@@ -93,4 +93,26 @@ contract TurnstileBondTest is Test {
         assertEq(turnstile.balances(id), 100);
         vm.stopPrank();
     }
+
+    function testClaimableBond() external {
+        (address a, uint256 id,) = createCSR("test1");
+        address b = mockAddress("test2");
+        vm.startPrank(a);
+        turnstile.approve(address(bond), id);
+        bond.start(id, 100, 1000, 1e17);
+        vm.stopPrank();
+
+        vm.deal(b,1000000);
+        vm.startPrank(b);
+        bond.fund{value: 1000}(id);
+        vm.stopPrank();
+
+        turnstile.distributeFees{value: 1200}(id);
+
+        TurnstileBond.ClaimableBondResponse[] memory info = bond.getClaimableBond(b);
+        for(uint256 i = 0; i<info.length; i++) {
+            console.log(info[i].tokenId);
+            console.log(info[i].amount);
+        }
+    }
 }
