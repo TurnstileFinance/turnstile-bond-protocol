@@ -6,9 +6,10 @@ import "./ICSR.sol";
 contract TurnstileBond is TurnstileUser, ERC1155 {
     enum Status {
         NotStarted,
-        Active,
-        Canceled,
-        Withdrawn
+        Rasing,
+        Ended,
+        Withdrawn,
+        Canceled
     }
 
     struct BondInfo {
@@ -30,7 +31,8 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
     uint256[] public allBonds;
 
     error NotSeller();
-    error NotActive();
+    error NotRasing();
+    error NotEnded();
     error TransferFailed();
 
     constructor(address _turnstile, uint256 _id) TurnstileUser(_turnstile, _id) {
@@ -56,9 +58,9 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
 
     function bondStatus(uint256 _tokenId) public view returns(BondStatusResponse memory info) {
         return BondStatusResponse({
-            tokenId : _tokenId,
-            info : bondInfo[_tokenId],
-            accrued : bondInfo[_tokenId].accrued + turnstile.balances(_tokenId)
+        tokenId : _tokenId,
+        info : bondInfo[_tokenId],
+        accrued : bondInfo[_tokenId].accrued + turnstile.balances(_tokenId)
         });
     }
 
@@ -80,7 +82,7 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
             info[i] = bondStatus(allBonds[i]);
         }
     }
-    
+
     function currentBondStatus() external view returns(BondStatusResponse[] memory info) {
         info = new BondStatusResponse[](currentBonds.length);
         for(uint256 i = 0; i < currentBonds.length; i++) {
@@ -101,9 +103,9 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
             uint256 claimable = claimableAmount(allBonds[i], _user);
             if(balanceOf[_user][allBonds[i]] > 0) {
                 data[resultlen] = ClaimableBondResponse({
-                    tokenId : allBonds[i],
-                    amount : claimable,
-                    bondStatus : bondStatus(allBonds[i])
+                tokenId : allBonds[i],
+                amount : claimable,
+                bondStatus : bondStatus(allBonds[i])
                 });
                 resultlen++;
             }
@@ -126,14 +128,14 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         require(_softCap <= _hardCap, "softCap > hardCap");
         turnstile.transferFrom(msg.sender, address(this), _tokenId);
         bondInfo[_tokenId] = BondInfo({
-            status : Status.Active,
-            seller : payable(msg.sender),
-            softCap : _softCap,
-            hardCap : _hardCap,
-            premium : _premium,
-            raised : 0,
-            received : 0,
-            accrued : 0
+        status : Status.Rasing,
+        seller : payable(msg.sender),
+        softCap : _softCap,
+        hardCap : _hardCap,
+        premium : _premium,
+        raised : 0,
+        received : 0,
+        accrued : 0
         }); // refresh the sale
         sellerNfts[msg.sender].push(_tokenId);
         currentBonds.push(_tokenId);
@@ -153,8 +155,8 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         if(msg.sender != bondInfo[_tokenId].seller) {
             revert NotSeller();
         }
-        if(bondInfo[_tokenId].status != Status.Active) {
-            revert NotActive();
+        if(bondInfo[_tokenId].status != Status.Rasing) {
+            revert NotRasing();
         }
         require(bondInfo[_tokenId].raised <= bondInfo[_tokenId].softCap, "minGoal passed");
         require(bondInfo[_tokenId].received <= msg.value, "received > msg.value");
@@ -187,15 +189,33 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         }
     }
 
+
+    /// @notice end the bond sale
+    /// @dev end the bond sale and receive the fund
+    /// @param _tokenId the token id
+    function end(uint256 _tokenId) external {
+        if(msg.sender != bondInfo[_tokenId].seller) {
+            revert NotSeller();
+        }
+        if(bondInfo[_tokenId].status != Status.Rasing) {
+            revert NotRasing();
+        }
+        require(bondInfo[_tokenId].raised >= bondInfo[_tokenId].softCap, "minGoal not passed");
+
+        bondInfo[_tokenId].status = Status.Ended;
+        harvest(_tokenId);
+        receiveFund(_tokenId);
+    }
+
     /// @notice receive the fund
-    /// @dev receive the fund and transfer canto to seller
+    /// @dev receive the fund and transfer canto to seller only after funding ended
     /// @param _tokenId the token id
     function receiveFund(uint256 _tokenId) public {
         if(msg.sender != bondInfo[_tokenId].seller) {
             revert NotSeller();
         }
-        if(bondInfo[_tokenId].status != Status.Active) {
-            revert NotActive();
+        if(bondInfo[_tokenId].status == Status.Ended) {
+            revert NotEnded();
         }
         uint256 receiving = bondInfo[_tokenId].raised - bondInfo[_tokenId].received;
         if(receiving > 0) {
@@ -208,7 +228,6 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
     /// @notice withdraw turnstile nft
     /// @dev withdraw turnstile nft and refund the extra fund
     function withdraw(uint256 _tokenId) external {
-        harvest(_tokenId);
         receiveFund(_tokenId); // receive the fund before withdrawal
         require(bondInfo[_tokenId].accrued >= (bondInfo[_tokenId].raised * (1e18 + bondInfo[_tokenId].premium)) / 1e18, "accrued < raised * (1 + premium)");
         turnstile.transferFrom(address(this), msg.sender, _tokenId);
@@ -237,8 +256,8 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
     /// @param _tokenId the token id
     function fund(uint256 _tokenId) external payable {
         harvest(_tokenId);
-        if(bondInfo[_tokenId].status != Status.Active) {
-            revert NotActive();
+        if(bondInfo[_tokenId].status != Status.Rasing) {
+            revert NotRasing();
         }
         uint256 amount = msg.value;
         if(bondInfo[_tokenId].raised + amount > bondInfo[_tokenId].hardCap) {
@@ -246,6 +265,13 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
         }
         bondInfo[_tokenId].raised += amount;
         _mint(msg.sender, _tokenId, amount, "");
+
+        // end the bond if the bond is fully raised
+        if(bondInfo[_tokenId].raised == bondInfo[_tokenId].hardCap) {
+            harvest(_tokenId);
+            bondInfo[_tokenId].status = Status.Ended;
+        }
+
         if(msg.value - amount > 0) {
             //refund
             (bool success, ) = msg.sender.call{value: msg.value - amount}("");
@@ -257,11 +283,10 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
     /// @dev claim amount will be calculated by the ratio of raised and accrued if not canceled
     /// @param _tokenId the token id
     function claim(uint256 _tokenId) external {
-        if(bondInfo[_tokenId].status == Status.Active) { // guard to enable claim after withdraw/cancel
-            harvest(_tokenId);
-        }
+        require(bondInfo[_tokenId].status != Status.NotStarted && bondInfo[_tokenId].status != Status.Rasing, "not claimable yet");
+
         uint256 amount = balanceOf[msg.sender][_tokenId];
-        uint256 accrueShare = 0; 
+        uint256 accrueShare = 0;
         if( bondInfo[_tokenId].raised > 0) {
             accrueShare = bondInfo[_tokenId].accrued * amount / bondInfo[_tokenId].raised;
         }
@@ -277,7 +302,7 @@ contract TurnstileBond is TurnstileUser, ERC1155 {
             }
             bondInfo[_tokenId].accrued -= accrueShare;
 
-            (bool success, ) = msg.sender.call{value : accrueShare}("");        
+            (bool success, ) = msg.sender.call{value : accrueShare}("");
             require(success, "refund failed");
         }
     }
